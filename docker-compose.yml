@@ -56,7 +56,7 @@ services:
       - ${PROJECT_PATH:-./example-project}:/project:ro
       
       # Persistent data for file trees and configurations
-      - filescope_data:/app/data
+      - ${DATA_PATH:-filescope_data}:/app/data
       
       # Optional: Mount custom configuration
       - ${CONFIG_PATH:-./config}:/app/config:ro
