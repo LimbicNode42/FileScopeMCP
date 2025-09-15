@@ -5,13 +5,13 @@ version: '3.8'
 
 services:
   # FileScopeMCP Application
-  filescope-mcp:
+  filescope:
     build:
       context: .
       dockerfile: Dockerfile.production
       args:
         NODE_ENV: ${NODE_ENV:-production}
-    container_name: filescope-mcp
+    container_name: filescope
     restart: unless-stopped
     
     # Environment configuration
