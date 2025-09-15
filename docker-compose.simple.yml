@@ -1,0 +1,33 @@
+# Simple Docker Compose for FileScopeMCP
+# Minimal configuration for maximum compatibility
+
+version: '3.8'
+
+services:
+  filescope-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: filescope-mcp-simple
+    restart: unless-stopped
+    
+    # Basic environment
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+    
+    # Port mapping
+    ports:
+      - "3000:3000"
+    
+    # Simple volume mount (adjust path as needed)
+    volumes:
+      - ./:/workspace:ro
+    
+    # Basic health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

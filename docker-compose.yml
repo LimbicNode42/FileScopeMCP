@@ -73,15 +73,16 @@ services:
       retries: 3
       start_period: 60s
     
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '0.5'
-        reservations:
-          memory: 256M
-          cpus: '0.1'
+    # Resource limits (commented out for compatibility)
+    # Uncomment and adjust if your system supports cgroup v2
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 1G
+    #       cpus: '0.5'
+    #     reservations:
+    #       memory: 256M
+    #       cpus: '0.1'
 
 # Named volumes for persistent data
 volumes:
