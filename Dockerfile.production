@@ -19,7 +19,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copy source code and build all required components
+# Copy TypeScript configuration and source code
+COPY tsconfig.json ./
 COPY src/ ./src/
 RUN npm run build
 
