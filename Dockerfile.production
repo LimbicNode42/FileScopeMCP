@@ -19,9 +19,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copy source code and build just the HTTP server components
-COPY src/http-server.ts src/start-http.ts src/logger.ts src/storage-utils.ts src/file-utils.ts src/types.ts src/global-state.ts src/config-utils.ts ./src/
-RUN npx tsc src/http-server.ts src/start-http.ts src/logger.ts src/storage-utils.ts src/file-utils.ts src/types.ts src/global-state.ts src/config-utils.ts --outDir dist --module ESNext --target ES2020 --moduleResolution node --strict --esModuleInterop --skipLibCheck
+# Copy source code and build all required components
+COPY src/ ./src/
+RUN npm run build
 
 # Remove dev dependencies
 RUN npm prune --production
