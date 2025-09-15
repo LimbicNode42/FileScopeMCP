@@ -6,6 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { log } from './logger.js';
+import { createMcpServerInstance, initializeServerState } from './mcp-server-core.js';
 
 // Load environment variables
 dotenv.config();
@@ -16,48 +17,14 @@ const ALLOWED_HOSTS = process.env.ALLOWED_HOSTS?.split(',') || ['127.0.0.1', 'lo
 const ENABLE_DNS_REBINDING_PROTECTION = process.env.ENABLE_DNS_REBINDING_PROTECTION === 'true';
 
 /**
- * Create a minimal MCP server instance for HTTP transport
- * This is a simplified version that can be expanded later
+ * Create a full MCP server instance with all 21 tools for HTTP transport
  */
-async function createSimpleMcpServer(): Promise<McpServer> {
-  const serverInfo = {
-    name: "FileScopeMCP",
-    version: "1.0.0",
-    description: "A tool for ranking files in your codebase by importance and providing summaries with dependency tracking"
-  };
-
-  const server = new McpServer(serverInfo, {
-    capabilities: {
-      tools: { listChanged: true }
-    }
-  });
-
-  // Add a simple ping tool for testing
-  server.tool("ping", "Test tool that responds with pong", {}, async () => {
-    return {
-      content: [{
-        type: "text",
-        text: "pong - FileScopeMCP HTTP server is running!"
-      }]
-    };
-  });
-
-  // Add health check tool
-  server.tool("health", "Check server health status", {}, async () => {
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          status: "healthy",
-          timestamp: new Date().toISOString(),
-          transport: "http",
-          port: PORT
-        }, null, 2)
-      }]
-    };
-  });
-
-  return server;
+async function createFullMcpServer(): Promise<McpServer> {
+  // Initialize server state first
+  await initializeServerState();
+  
+  // Create the full server instance with all tools
+  return await createMcpServerInstance();
 }
 
 export async function startHttpServer(): Promise<void> {
@@ -123,7 +90,7 @@ export async function startHttpServer(): Promise<void> {
         };
 
         // Create and connect the MCP server
-        const server = await createSimpleMcpServer();
+        const server = await createFullMcpServer();
         await server.connect(transport);
         log('MCP server connected to new transport');
       } else {
