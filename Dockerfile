@@ -1,14 +1,33 @@
-# Production Dockerfile for FileScopeMCP
-FROM node:22-slim
+# Multi-stage build for FileScopeMCP
+FROM node:22-slim AS builder
 
-# Install system dependencies
+# Install build dependencies
 RUN apt-get update && \
     apt-get install -y \
         python3 \
         make \
         g++ \
-        curl \
         git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files and install ALL dependencies (including dev dependencies for build)
+COPY package*.json ./
+RUN npm ci
+
+# Copy source code and build
+COPY . .
+RUN npm run build
+
+# Production stage
+FROM node:22-slim AS production
+
+# Install runtime dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -17,7 +36,7 @@ WORKDIR /app
 # Create non-root user for security
 RUN groupadd -r filescope && useradd -r -g filescope filescope
 
-# Copy package files and install dependencies
+# Copy package files and install only production dependencies
 COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
