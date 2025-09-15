@@ -1,0 +1,81 @@
+# FileScopeMCP Docker ignore file
+# Excludes files and directories from Docker build context
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Development files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Test files
+coverage/
+.nyc_output/
+test-results/
+*.test.ts
+*.spec.ts
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+CHANGELOG.md
+docs/
+
+# Development tools
+.eslintrc*
+.prettierrc*
+jest.config.*
+vitest.config.*
+
+# Package manager files
+.yarn/
+.pnp.*
+yarn.lock
+pnpm-lock.yaml
+
+# Runtime files
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Docker files (avoid recursive copying)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# FileScopeMCP specific
+FileScopeMCP-*.json
+FileScopeMCP-*.html
+FileScopeMCP-*.png

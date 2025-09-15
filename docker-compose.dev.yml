@@ -1,0 +1,86 @@
+# Docker Compose for FileScopeMCP Development
+# Development setup with hot reload and debugging capabilities
+
+version: '3.8'
+
+services:
+  # FileScopeMCP Development Server
+  filescope-mcp-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: development
+    container_name: filescope-mcp-dev
+    restart: unless-stopped
+    
+    # Environment configuration
+    env_file:
+      - .env
+    environment:
+      # Development Environment
+      NODE_ENV: development
+      HOST: ${HOST:-0.0.0.0}
+      PORT: ${PORT:-3000}
+      
+      # Debugging
+      DEBUG: ${DEBUG:-*}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      LOG_FORMAT: ${LOG_FORMAT:-console}
+      
+      # HTTP Server Configuration
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      ENABLE_DNS_REBINDING_PROTECTION: ${ENABLE_DNS_REBINDING_PROTECTION:-false}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-127.0.0.1,localhost}
+      
+      # Development Features
+      ENABLE_PERFORMANCE_LOGGING: ${ENABLE_PERFORMANCE_LOGGING:-true}
+      HOT_RELOAD: ${HOT_RELOAD:-true}
+    
+    # Port mapping
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+      # Debug port for Node.js debugging
+      - "9229:9229"
+    
+    # Volume mounts for development
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src:ro
+      - ./package*.json:/app/
+      
+      # Mount your workspace/codebase here
+      - ${WORKSPACE_PATH:-./}:/workspace:ro
+      
+      # Development data
+      - filescope_dev_data:/app/data
+      
+      # Node modules cache
+      - node_modules_cache:/app/node_modules
+    
+    # Network configuration
+    networks:
+      - filescope-dev
+    
+    # Development command with debugging enabled
+    command: ["node", "--inspect=0.0.0.0:9229", "dist/start-http.js"]
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-3000}/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+# Named volumes for development
+volumes:
+  filescope_dev_data:
+    driver: local
+  node_modules_cache:
+    driver: local
+
+# Development network
+networks:
+  filescope-dev:
+    driver: bridge

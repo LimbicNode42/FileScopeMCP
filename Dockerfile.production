@@ -1,0 +1,80 @@
+# Multi-stage production Dockerfile for FileScopeMCP
+# Optimized for production deployment with minimal image size
+
+# Build stage
+FROM node:22-slim as builder
+
+# Install build dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        python3 \
+        make \
+        g++ \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy package files and install all dependencies (including dev)
+COPY package*.json ./
+RUN npm ci
+
+# Copy source code and build just the HTTP server components
+COPY src/http-server.ts src/start-http.ts src/logger.ts src/storage-utils.ts src/file-utils.ts src/types.ts src/global-state.ts src/config-utils.ts ./src/
+RUN npx tsc src/http-server.ts src/start-http.ts src/logger.ts src/storage-utils.ts src/file-utils.ts src/types.ts src/global-state.ts src/config-utils.ts --outDir dist --module ESNext --target ES2020 --moduleResolution node --strict --esModuleInterop --skipLibCheck
+
+# Remove dev dependencies
+RUN npm prune --production
+
+# Production stage
+FROM node:22-slim as production
+
+# Install runtime dependencies only
+RUN apt-get update && \
+    apt-get install -y \
+        curl \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Create non-root user for security
+RUN groupadd -r filescope && useradd -r -g filescope filescope
+
+# Copy production dependencies and built application from builder stage
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+
+# Change ownership to non-root user
+RUN chown -R filescope:filescope /app
+
+# Switch to non-root user
+USER filescope
+
+# Set up runtime environment
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
+ENV LOG_LEVEL=info
+ENV CORS_ORIGIN=*
+ENV ENABLE_DNS_REBINDING_PROTECTION=false
+
+# Create data directory for file trees and configurations
+RUN mkdir -p /app/data
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/health || exit 1
+
+# Expose port
+EXPOSE 3000
+
+# Add labels for better maintainability
+LABEL org.opencontainers.image.title="FileScopeMCP"
+LABEL org.opencontainers.image.description="MCP server for file hierarchy and dependency tracking"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.vendor="LimbicNode42"
+
+# Default command (HTTP server)
+CMD ["node", "dist/start-http.js"]
