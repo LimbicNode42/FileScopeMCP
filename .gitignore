@@ -22,4 +22,5 @@ FileScopeMCP-tree.json
 *.pdf
 *.csv
 run.sh
+.env
 
